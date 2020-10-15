@@ -1,0 +1,40 @@
+cabal-version: 2.4
+name: common-event-format
+version: 0.1.0.0
+synopsis: Parse the Common Event Format
+description: https://github.com/layer-3-communications/common-event-format
+bug-reports: https://github.com/layer-3-communications/common-event-format/issues
+license: BSD-3-Clause
+license-file: LICENSE
+author: Andrew Martin
+maintainer: amartin@layer3com.com
+copyright: 2020 Layer 3 Communications
+category: Data
+build-type: Simple
+extra-source-files: CHANGELOG.md
+
+library
+  exposed-modules: Cef
+  build-depends:
+    , base >=4.12 && <5
+    , bytesmith
+    , byteslice >=0.2.4 && <0.3
+    , array-chunks
+    , array-builder
+    , primitive
+  default-language: Haskell2010
+  hs-source-dirs: src
+  ghc-options: -O2
+
+test-suite test
+  type: exitcode-stdio-1.0
+  hs-source-dirs: test, common
+  main-is: Main.hs
+  other-modules: Sample
+  build-depends:
+    , base
+    , common-event-format
+    , primitive
+    , byteslice
+  ghc-options: -Wall -O2
+  default-language: Haskell2010
