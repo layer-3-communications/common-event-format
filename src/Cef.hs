@@ -59,18 +59,41 @@ parser = do
   deviceProduct <- Parser.takeTrailedBy () 0x7C
   deviceVersion <- Parser.takeTrailedBy () 0x7C
   signatureId <- Parser.takeTrailedBy () 0x7C
-  name <- Parser.takeTrailedBy () 0x7C
-  severity <- Latin.decWord8 ()
-  Latin.char () '|'
-  key0 <- Parser.takeTrailedBy () 0x3D
-  bldr0 <- Parser.effect Builder.new
-  extension' <- parserExtension bldr0 key0
-  let !extension = Chunks.concat extension'
-      !fields = Fields
-        { version, deviceVendor, deviceProduct
-        , deviceVersion, signatureId, name, severity
-        }
-  pure Event{fields,extension}
+  -- We do this nonsense because CEF logs from A10s are missing
+  -- the name field sometimes. This makes the logs technically
+  -- not compliant with CEF, but it is easier to hack about their
+  -- infidelity to a spec than it is to get the appliance fixed.
+  target <- Unsafe.cursor
+  n <- Parser.any ()
+  p <- Parser.any ()
+  if p == 0x7C && n >= 0x30 && n <= 0x39 -- if it is a digit followed by pipe
+    then do
+      let severity = n - 0x30
+      key0 <- Parser.takeTrailedBy () 0x3D
+      bldr0 <- Parser.effect Builder.new
+      extension' <- parserExtension bldr0 key0
+      arr <- Unsafe.expose
+      let !extension = Chunks.concat extension'
+          !fields = Fields
+            { version, deviceVendor, deviceProduct
+            , deviceVersion, signatureId, severity
+            , name = Bytes arr target 0
+            }
+      pure Event{fields,extension}
+    else do
+      Unsafe.jump target
+      name <- Parser.takeTrailedBy () 0x7C
+      severity <- Latin.decWord8 ()
+      Latin.char () '|'
+      key0 <- Parser.takeTrailedBy () 0x3D
+      bldr0 <- Parser.effect Builder.new
+      extension' <- parserExtension bldr0 key0
+      let !extension = Chunks.concat extension'
+          !fields = Fields
+            { version, deviceVendor, deviceProduct
+            , deviceVersion, signatureId, name, severity
+            }
+      pure Event{fields,extension}
 
 parserExtension :: Builder s Pair -> Bytes -> Parser () s (Chunks Pair)
 parserExtension !bldr0 !key0 = do

@@ -30,4 +30,9 @@ main = do
           when (value /= Bytes.fromAsciiString "ignore")
             (fail "Expected last value to be ignore")
   putStrLn "Test A Succeeded"
+  putStrLn "Test B"
+  case decode sampleA10_b of
+    Nothing -> fail "Failed to parse"
+    Just _ -> pure ()
+  putStrLn "Test B Succeeded"
   putStrLn "Complete"
