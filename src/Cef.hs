@@ -9,14 +9,16 @@ module Cef
   , decode
   ) where
 
-import Data.Bytes.Types (Bytes(Bytes))
-import Data.Bytes.Parser (Parser)
-import Data.Word (Word8)
-import Data.Primitive (SmallArray)
-import Data.Chunks (Chunks)
+import Control.Monad.ST.Run (runByteArrayST)
 import Data.Builder.ST (Builder)
+import Data.Bytes.Parser (Parser)
+import Data.Bytes.Types (Bytes(Bytes))
+import Data.Chunks (Chunks)
+import Data.Primitive (SmallArray)
+import Data.Word (Word8)
 
 import qualified Data.Bytes as Bytes
+import qualified Data.Primitive as PM
 import qualified Data.Bytes.Parser as Parser
 import qualified Data.Bytes.Parser.Latin as Latin
 import qualified Data.Bytes.Parser.Unsafe as Unsafe
@@ -98,13 +100,13 @@ parser = do
 parserExtension :: Builder s Pair -> Bytes -> Parser () s (Chunks Pair)
 parserExtension !bldr0 !key0 = do
   start <- Unsafe.cursor
-  b <- Parser.takeWhile (/=0x3D)
+  b0 <- takeUntilUnescapedEquals start
+  let !b = case Bytes.any (==0x5C) b0 of
+        True -> unescape b0
+        False -> b0
   Parser.isEndOfInput >>= \case
     True -> do
-      end <- Unsafe.cursor
-      arr <- Unsafe.expose
-      let !val0 = Bytes arr start (end - start)
-      let !pair = Pair{key=key0,value=val0}
+      let !pair = Pair{key=key0,value=b}
       Parser.effect $ do
         bldr1 <- Builder.push pair bldr0
         Builder.freeze bldr1
@@ -116,3 +118,35 @@ parserExtension !bldr0 !key0 = do
           let !pair = Pair{key=key0,value=val0}
           bldr1 <- Parser.effect (Builder.push pair bldr0)
           parserExtension bldr1 key1
+
+takeUntilUnescapedEquals :: Int -> Parser () s Bytes
+takeUntilUnescapedEquals !initialCursor = do
+  b <- Parser.takeWhile (/=0x3D)
+  pos <- Unsafe.cursor
+  arr <- Unsafe.expose
+  let w = PM.indexByteArray arr (pos - 1) :: Word8
+  case w of
+    0x5C -> do
+      _ <- Parser.any ()
+      takeUntilUnescapedEquals initialCursor
+    _ -> do
+      let !val0 = Bytes arr initialCursor (pos - initialCursor)
+      pure val0
+
+unescape :: Bytes -> Bytes
+unescape (Bytes src srcOff0 srcLen0) =
+  let output = runByteArrayST $ do
+        dst <- PM.newByteArray srcLen0
+        let go !srcIx !dstIx !len = case len of
+              0 -> do
+                PM.shrinkMutableByteArray dst dstIx
+                PM.unsafeFreezeByteArray dst
+              _ -> case PM.indexByteArray src srcIx :: Word8 of
+                0x5C -> do
+                  PM.writeByteArray dst dstIx (PM.indexByteArray src (srcIx + 1) :: Word8)
+                  go (srcIx + 2) (dstIx + 1) (len - 2)
+                w -> do
+                  PM.writeByteArray dst dstIx w
+                  go (srcIx + 1) (dstIx + 1) (len - 1)
+        go srcOff0 0 srcLen0
+   in Bytes output 0 (PM.sizeofByteArray output)

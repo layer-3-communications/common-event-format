@@ -1,13 +1,15 @@
 module Sample
   ( sampleA10_a
   , sampleA10_b
+  , sampleCrowdstrike_c
   ) where
 
 import Data.Bytes (Bytes)
+import qualified Data.Bytes.Text.Ascii as Ascii
 import qualified Data.Bytes as Bytes
 
 sampleA10_a :: Bytes
-sampleA10_a = Bytes.fromAsciiString
+sampleA10_a = Ascii.fromString
   "CEF:0|A10|TH4225 TPS|3.1.2-TPS-P1|DDOS|Well known port \
   \check|4|externalId=3461888970 cs1=EX-HOSTING traffic-type \
   \UDP cs1Label=obj-info msg=DDoS packet from well-known UDP \
@@ -16,8 +18,15 @@ sampleA10_a = Bytes.fromAsciiString
   \spt=999 dst=192.0.2.11 dpt=1001 act=ignore"
 
 sampleA10_b :: Bytes
-sampleA10_b = Bytes.fromAsciiString
+sampleA10_b = Ascii.fromString
   "CEF:0|A10|TH4415 TPS|3.6.8-TPS-P3|DDOS|4|externalId=3511768169 \
   \cs1=EX-HOSTING traffic-type ICMP cs1Label=obj-info \
   \cs3=ICMP_BASIC_GENERAL cs3Label=template cnt=3327 \
   \src=192.0.2.33 dst=192.0.2.5 act=drop"
+
+sampleCrowdstrike_c :: Bytes
+sampleCrowdstrike_c = Ascii.fromString
+  "CEF:0|CrowdStrike|FalconHost|1.0|ScheduledReportNotificationEvent|\
+  \Scheduled Report Notification Event|1|cat=\
+  \ScheduledReportNotificationEvent\
+  \ reportFileReference=/report-executions-download/v1?ids\\=abcdefg"
