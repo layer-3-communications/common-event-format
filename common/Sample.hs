@@ -2,6 +2,7 @@ module Sample
   ( sampleA10_a
   , sampleA10_b
   , sampleCrowdstrike_c
+  , samplePan_a
   ) where
 
 import Data.Bytes (Bytes)
@@ -30,3 +31,18 @@ sampleCrowdstrike_c = Ascii.fromString
   \Scheduled Report Notification Event|1|cat=\
   \ScheduledReportNotificationEvent\
   \ reportFileReference=/report-executions-download/v1?ids\\=abcdefg"
+
+samplePan_a :: Bytes
+samplePan_a = Ascii.fromString
+  "CEF:0|Palo Alto Networks|PAN-OS|10.0|VPN|GLOBALPROTECT|1|rt=2023/05/24 15:25:04 \
+  \PanOSDeviceSN=004251758665 PanOSLogTimeStamp=2023/05/24 15:25:04 \
+  \PanOSVirtualSystem=vsys1 PanOSEventID=gateway-config-release \
+  \PanOSStage=configuration PanOSAuthMethod= PanOSTunnelType= \
+  \PanOSSourceUserName=bob@example.com PanOSSourceRegion=US \
+  \PanOSEndpointDeviceName=bob-iphone-2 PanOSPublicIPv4=192.0.2.20 \
+  \PanOSPublicIPv6=0.0.0.0 PanOSPrivateIPv4=192.0.2.10 \
+  \PanOSPrivateIPv6=0.0.0.0 PanOSHostID=de:ad:be:ef:01:23 \
+  \PanOSDeviceSN=ABCD123456 PanOSGlobalProtectClientVersion=1.0.0 \
+  \PanOSEndpointOSType=Mac PanOSEndpointOSVersion=\"Apple Mac OS X 1.2.3\" \
+  \PanOSCountOfRepeats=1 PanOSQuarantineReason= PanOSConnectionError= \
+  \PanOSDescription=\"\" PanOSEventStatus=success"

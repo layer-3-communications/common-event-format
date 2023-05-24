@@ -60,3 +60,8 @@ main = do
             "."
   putStrLn "Test C Succeeded"
   putStrLn "Complete"
+  putStrLn "Test D"
+  case decode samplePan_a of
+    Nothing -> fail "Failed to parse"
+    Just _ -> pure ()
+  putStrLn "Test D Succeeded"
