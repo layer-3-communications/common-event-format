@@ -65,3 +65,8 @@ main = do
     Nothing -> fail "Failed to parse"
     Just _ -> pure ()
   putStrLn "Test D Succeeded"
+  putStrLn "Test E"
+  case decode samplePan_b of
+    Nothing -> fail "Failed to parse"
+    Just _ -> pure ()
+  putStrLn "Test E Succeeded"
