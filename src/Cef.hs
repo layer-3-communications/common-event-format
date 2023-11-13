@@ -84,7 +84,9 @@ parser = do
       pure Event{fields,extension}
     else do
       Unsafe.jump target
-      name <- Parser.takeTrailedBy () 0x7C
+      name0 <- Parser.takeTrailedBy () 0x7C
+      -- CEF logs from Sophos have backslashes in the name field escaped.
+      let !name1 = Bytes.replace (Bytes.doubleton 0x5C 0x5C) (Bytes.singleton 0x5C) name0
       severity <- Latin.decWord8 ()
       Latin.char () '|'
       key0 <- Latin.takeTrailedBy () '='
@@ -93,7 +95,7 @@ parser = do
       let !extension = Chunks.concat extension'
           !fields = Fields
             { version, deviceVendor, deviceProduct
-            , deviceVersion, signatureId, name, severity
+            , deviceVersion, signatureId, name=name1, severity
             }
       pure Event{fields,extension}
 
